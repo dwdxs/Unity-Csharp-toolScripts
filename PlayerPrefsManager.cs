@@ -19,31 +19,44 @@ public class PlayerPrefsManager
 
         FieldInfo[] fieldInfos = targetType.GetFields();
         object targetObject = Activator.CreateInstance(targetType);
+
+        string loadKeyName;
+
         foreach (FieldInfo fieldInfo in fieldInfos)
         {
-            //字段名
-            string dataName = fieldInfo.Name;
-            //字段类型
-            Type dataType = fieldInfo.FieldType;
-            if (dataType == typeof(int))
-            {
-                int value = PlayerPrefs.GetInt($"{keyName}_{dataName}");
-                fieldInfo.SetValue(targetObject, value);
-            }
-            if (dataType == typeof(string))
-            {
-                string value = PlayerPrefs.GetString($"{keyName}_{dataName}");
-                fieldInfo.SetValue(targetObject, value);
+            loadKeyName = keyName + "_" + fieldInfo.FieldType.Name + "_" + fieldInfo.Name;
 
-            }
-            if (dataType == typeof(float))
-            {
-                float value = PlayerPrefs.GetFloat($"{keyName}_{dataName}");
-                fieldInfo.SetValue(targetObject, value);
-
-            }
+            LoadValue(fieldInfo, loadKeyName, targetObject);
         }
         return targetObject;
+    }
+    private void LoadValue(FieldInfo fieldInfo, string loadKeyName, object targetObject)
+    {
+
+        Type dataType = fieldInfo.FieldType;
+
+        if (dataType == typeof(int))
+        {
+            int value = PlayerPrefs.GetInt(loadKeyName);
+            fieldInfo.SetValue(targetObject, value);
+        }
+        if (dataType == typeof(string))
+        {
+            string value = PlayerPrefs.GetString(loadKeyName);
+            fieldInfo.SetValue(targetObject, value);
+
+        }
+        if (dataType == typeof(float))
+        {
+            float value = PlayerPrefs.GetFloat(loadKeyName);
+            fieldInfo.SetValue(targetObject, value);
+
+        }
+        if (dataType == typeof(bool))
+        {
+            bool value = PlayerPrefs.GetInt(loadKeyName) == 1 ? true : false;
+            fieldInfo.SetValue(targetObject, value);
+        }
     }
     /// <summary>
     /// 存储数据
@@ -56,26 +69,40 @@ public class PlayerPrefsManager
         Type dataType = data.GetType();
         //获取实例中的字段信息
         FieldInfo[] fieldInfos = dataType.GetFields();
-        //遍历字段
+
+
+        string saveKeyName;
+        object dataValue;
+
         foreach (FieldInfo fieldInfo in fieldInfos)
         {
-            //字段名
-            string dataName = fieldInfo.Name;
-            //字段值
-            object dataValue = fieldInfo.GetValue(data);
-            if (dataValue is int)
-            {
-                PlayerPrefs.SetInt($"{keyName}_{dataName}", (int)dataValue);
-            }
-            if (dataValue is string)
-            {
-                PlayerPrefs.SetString($"{keyName}_{dataName}", dataValue as string);
-            }
-            if (dataValue is float)
-            {
-                PlayerPrefs.SetFloat($"{keyName}_{dataName}", (float)dataValue);
-            }
+
+            dataValue = fieldInfo.GetValue(data);
+            saveKeyName = keyName + "_" + fieldInfo.FieldType.Name + "_" + fieldInfo.Name;
+
+            SaveValue(dataValue, saveKeyName);
         }
 
     }
+
+    private void SaveValue(object dataValue, string saveKeyName)
+    {
+        if (dataValue is int)
+        {
+            PlayerPrefs.SetInt(saveKeyName, (int)dataValue);
+        }
+        if (dataValue is string)
+        {
+            PlayerPrefs.SetString(saveKeyName, dataValue.ToString());
+        }
+        if (dataValue is float)
+        {
+            PlayerPrefs.SetFloat(saveKeyName, (float)dataValue);
+        }
+        if (dataValue is bool)
+        {
+            PlayerPrefs.SetInt(saveKeyName, (bool)dataValue ? 1 : 0);
+        }
+    }
+
 }
